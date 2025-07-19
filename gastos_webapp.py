@@ -56,12 +56,21 @@ def enviar_email(para, assunto, corpo):
         server.sendmail(user, para, msg.as_string())
 
 def calcular_primeira_fatura(data_compra, fechamento):
-    if data_compra.day <= fechamento:
-        return (data_compra.replace(day=1) + timedelta(days=31)).replace(day=1)
-    else:
-        return (data_compra.replace(day=1) + timedelta(days=62)).replace(day=1)
+    ano = data_compra.year
+    mes = data_compra.month
+    fechamento_date = datetime(ano, mes, fechamento)
+    if data_compra > fechamento_date:
+        mes += 1
+        if mes > 12:
+            mes = 1
+            ano += 1
+        fechamento_date = datetime(ano, mes, fechamento)
+    vencimento_mes = fechamento_date.month + 1
+    if vencimento_mes > 12:
+        vencimento_mes = 1
+        ano += 1
+    return datetime(fechamento_date.year, vencimento_mes, 1)
 
-# === INTERFACE ===
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
@@ -74,7 +83,6 @@ email_robson = "cogumelodosol1@gmail.com"
 categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
-
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 descricao = st.text_input("Descrição")
@@ -93,14 +101,14 @@ if st.button("Registrar"):
     else:
         data_compra = datetime.now()
         valor_final = valor if tipo == "Entrada" else -valor
-
         if tipo == "Entrada" or not credito:
             aba = mes_formatado(data_compra)
             add_lancamento_em_mes(data_compra, descricao, valor_final, categoria, aba)
         else:
             info = cartoes.get(cartao)
             if info:
-                primeira_fatura = calcular_primeira_fatura(data_compra, info["fechamento"])
+                fechamento = info["fechamento"]
+                primeira_fatura = calcular_primeira_fatura(data_compra, fechamento)
                 valor_parcela = round(valor_final / parcelas, 2)
                 for i in range(parcelas):
                     data_parcela = (primeira_fatura + pd.DateOffset(months=i)).to_pydatetime()
@@ -109,13 +117,11 @@ if st.button("Registrar"):
                     add_lancamento_em_mes(data_parcela, descricao_parcela, valor_parcela, categoria, aba)
             else:
                 st.warning("Cartão sem data configurada.")
-
         destinatario = email_robson if usuario == "baby girl" else email_juliana
         enviar_email(destinatario, f"Novo {tipo.lower()} registrado por {usuario}", f"{descricao} - R$ {valor_final:.2f} - {categoria}")
         st.success(f"{tipo} registrado com sucesso!")
         st.rerun()
 
-# === HISTÓRICO ===
 st.subheader("📚 Histórico completo")
 
 def carregar_tudo():
