@@ -2,12 +2,14 @@ import streamlit as st
 import pandas as pd
 import gspread
 from datetime import datetime
+import json, os
 from oauth2client.service_account import ServiceAccountCredentials
 
 # === CONFIGURAÇÃO DO GOOGLE SHEETS ===
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA/edit?hl=pt-br"
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+creds_dict = json.loads(os.environ["credentials"])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_url(SHEET_URL).sheet1
 
@@ -24,7 +26,7 @@ def excluir_linha(index):
 
 # === INTERFACE ===
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
-st.title("💸 Controle de Gastos Diários")
+st.title("💸 Controle de Gastos Diários 💖")
 
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
