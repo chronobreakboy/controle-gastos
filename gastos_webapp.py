@@ -43,6 +43,7 @@ def garantir_cabecalho():
 garantir_cabecalho()
 
 # === FUNÇÕES AUXILIARES ===
+@st.cache_data(ttl=300)
 def get_dataframe():
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
