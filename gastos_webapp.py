@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from datetime import datetime, timedelta
-import json, os
-import smtplib
+import json, os, smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -85,9 +84,10 @@ if st.button("Registrar"):
         st.warning("Preencha todos os campos corretamente!")
     else:
         data_compra = datetime.now()
+        valor_final = -valor if tipo == "Gasto" and credito else valor
         if tipo == "Entrada" or not credito:
             aba = mes_formatado(data_compra)
-            add_lancamento_em_mes(data_compra, descricao, valor, categoria, aba)
+            add_lancamento_em_mes(data_compra, descricao, valor_final, categoria, aba)
         else:
             info = cartoes.get(cartao)
             if info:
@@ -96,7 +96,7 @@ if st.button("Registrar"):
                     primeira_fatura = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
                 else:
                     primeira_fatura = data_compra.replace(day=1)
-                valor_parcela = round(valor / parcelas, 2)
+                valor_parcela = round(valor_final / parcelas, 2)
                 for i in range(parcelas):
                     data_parcela = (primeira_fatura + pd.DateOffset(months=i)).to_pydatetime()
                     descricao_parcela = f"{descricao} ({i+1}/{parcelas}) - {cartao}"
@@ -132,7 +132,8 @@ def carregar_tudo():
                     "Valor (R$)": valor_float,
                     "Categoria": linha[3],
                     "DataObj": data_obj,
-                    "Aba": aba.title
+                    "Aba": aba.title,
+                    "LinhaIndex": i
                 })
             except:
                 continue
@@ -155,27 +156,15 @@ if not df_historico.empty:
         if col6.button("🗑️", key=f"delete_global_{i}"):
             aba_nome = df_historico.at[i, "Aba"]
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
+            linha_idx = df_historico.at[i, "LinhaIndex"]
             valores_aba = aba.get_all_values()
-
-            alvo_data = df_historico.at[i, "Data"]
-            alvo_desc = df_historico.at[i, "Descrição"]
-            alvo_valor = f"{df_historico.at[i, 'Valor (R$)']:.2f}"
-            alvo_categoria = df_historico.at[i, "Categoria"]
-
-            linha_excluir = None
-            for idx, linha in enumerate(valores_aba[1:], start=2):
-                if len(linha) >= 4:
-                    valor_normalizado = linha[2].replace(",", ".")
-                    if (linha[0] == alvo_data and
-                        linha[1] == alvo_desc and
-                        valor_normalizado == alvo_valor and
-                        linha[3] == alvo_categoria):
-                        linha_excluir = idx
-                        break
-
-            if linha_excluir:
-                aba.delete_rows(linha_excluir)
-                st.success(f"Registro excluído da aba {aba_nome}!")
-                st.rerun()
+            if isinstance(linha_idx, int) and 0 < linha_idx < len(valores_aba):
+                linha_conteudo = valores_aba[linha_idx]
+                if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
+                    aba.delete_rows(linha_idx + 1)
+                    st.success(f"Registro excluído da aba {aba_nome}!")
+                    st.rerun()
+                else:
+                    st.error("Linha vazia ou incompleta — nada excluído.")
             else:
-                st.error("Não foi possível localizar a linha para excluir.")
+                st.error(f"Erro: índice inválido para exclusão ({linha_idx})")
