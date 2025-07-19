@@ -60,11 +60,18 @@ def calcular_primeira_fatura(data_compra, fechamento, vencimento):
     mes = data_compra.month
     data_fechamento = datetime(ano, mes, fechamento)
     if data_compra <= data_fechamento:
-        vencimento_date = datetime(ano, mes, vencimento)
+        venc_mes = mes + 1
+        venc_ano = ano
+        if venc_mes > 12:
+            venc_mes = 1
+            venc_ano += 1
     else:
-        proximo_mes = (data_fechamento + timedelta(days=1)).replace(day=1) + timedelta(days=31)
-        vencimento_date = proximo_mes.replace(day=vencimento)
-    return vencimento_date
+        venc_mes = mes + 2
+        venc_ano = ano
+        if venc_mes > 12:
+            venc_mes -= 12
+            venc_ano += 1
+    return datetime(venc_ano, venc_mes, vencimento)
 
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
