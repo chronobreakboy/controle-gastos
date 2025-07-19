@@ -6,9 +6,13 @@ import json, os
 import smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
-from streamlit_cookies_manager import EncryptedCookieManager
 
 # === COOKIES ===
+os.environ["COOKIE_PASSWORD"] = st.secrets["COOKIE_PASSWORD"]
+if "COOKIE_KEY" in st.secrets:
+    os.environ["COOKIE_KEY"] = st.secrets["COOKIE_KEY"]
+
+from streamlit_cookies_manager import EncryptedCookieManager
 cookies = EncryptedCookieManager(prefix="gastinhos_")
 if not cookies.ready():
     st.stop()
@@ -43,7 +47,6 @@ def garantir_cabecalho():
 garantir_cabecalho()
 
 # === FUNÇÕES AUXILIARES ===
-@st.cache_data(ttl=300)
 def get_dataframe():
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
