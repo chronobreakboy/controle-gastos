@@ -158,11 +158,11 @@ if not df_historico.empty:
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
             linha_idx = df_historico.at[i, "LinhaIndex"]
             valores_aba = aba.get_all_values()
-            linha_planilha = linha_idx + 2
+            linha_planilha = int(linha_idx) + 2
             if 1 < linha_planilha <= len(valores_aba):
                 linha_conteudo = valores_aba[linha_planilha - 1]
                 if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
-                    aba.delete_rows(linha_planilha)
+                    aba.delete_rows(int(linha_planilha))
                     st.success(f"Registro excluído da aba {aba_nome}!")
                     st.rerun()
                 else:
