@@ -65,7 +65,9 @@ if not df.empty:
         col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 3, 1])
         col1.write(df.at[i, "Data"])
         col2.write(df.at[i, "Descrição"])
-        col3.write(f"R$ {df.at[i, 'Valor (R$)']:.2f}".replace('.', ','))
+        valor = pd.to_numeric(df.at[i, 'Valor (R$)'], errors='coerce')
+        col3.write(f"R$ {valor:.2f}".replace('.', ',') if pd.notnull(valor) else "R$ 0,00")
+
         col4.write(df.at[i, "Categoria"])
         if col5.button("🗑️", key=f"delete_{i}"):
             excluir_linha(i)
