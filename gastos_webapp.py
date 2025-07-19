@@ -92,7 +92,7 @@ if st.button("Registrar"):
             info = cartoes.get(cartao)
             if info:
                 fechamento = info["fechamento"]
-                if data_compra.day >= fechamento:
+                if data_compra.day > fechamento:
                     primeira_fatura = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
                 else:
                     primeira_fatura = data_compra.replace(day=1)
@@ -109,7 +109,6 @@ if st.button("Registrar"):
         st.success(f"{tipo} registrado com sucesso!")
         st.rerun()
 
-# === EXIBE HISTÓRICO DE TODAS AS ABAS ===
 st.subheader("📚 Histórico completo")
 
 def carregar_tudo():
@@ -120,7 +119,7 @@ def carregar_tudo():
         valores = aba.get_all_values()
         if not valores or valores[0] != ["Data", "Descrição", "Valor (R$)", "Categoria"]:
             continue
-        for i in range(1, len(valores)):  # pula cabeçalho
+        for i in range(1, len(valores)):
             linha = valores[i]
             if len(linha) < 4:
                 continue
@@ -159,7 +158,7 @@ if not df_historico.empty:
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
             linha_idx = df_historico.at[i, "LinhaIndex"]
             valores_aba = aba.get_all_values()
-            if isinstance(linha_idx, int) and linha_idx < len(valores_aba):
+            if isinstance(linha_idx, int) and 0 < linha_idx < len(valores_aba):
                 linha_conteudo = valores_aba[linha_idx]
                 if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
                     aba.delete_rows(linha_idx + 1)
