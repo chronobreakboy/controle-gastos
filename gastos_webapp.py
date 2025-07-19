@@ -16,14 +16,14 @@ sheet = client.open_by_url(SHEET_URL).sheet1
 # === GARANTIR CABEÇALHO ===
 def garantir_cabecalho():
     headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
-    registros = sheet.get_all_records()
-    if not registros:
-        sheet.insert_row(headers, index=1)
-    elif sheet.row_values(1) != headers:
-        sheet.delete_rows(1)
+    todas = sheet.get_all_values()
+
+    # Se a planilha estiver vazia ou não tiver os cabeçalhos em nenhuma linha
+    if not todas or headers not in todas:
         sheet.insert_row(headers, index=1)
 
 garantir_cabecalho()
+
 
 # === FUNÇÕES AUXILIARES ===
 def get_dataframe():
