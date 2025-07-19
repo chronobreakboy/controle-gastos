@@ -17,13 +17,10 @@ sheet = client.open_by_url(SHEET_URL).sheet1
 def garantir_cabecalho():
     headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
     todas = sheet.get_all_values()
-
-    # Se a planilha estiver vazia ou não tiver os cabeçalhos em nenhuma linha
     if not todas or headers not in todas:
         sheet.insert_row(headers, index=1)
 
 garantir_cabecalho()
-
 
 # === FUNÇÕES AUXILIARES ===
 def get_dataframe():
@@ -34,7 +31,7 @@ def get_dataframe():
     return df
 
 def add_lancamento(data, descricao, valor, categoria):
-    valor_str = f"{valor:.2f}".replace(",", ".")  # força separador de decimal com ponto
+    valor_str = f"{valor:.2f}".replace(",", ".")
     sheet.append_row([data, descricao, valor_str, categoria])
 
 def excluir_linha(index):
@@ -44,19 +41,25 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💔")
 
+# Categorias fixas
+categorias_opcoes = [
+    "Alimentação", "Transporte", "Bebê", "Lazer", "Casa",
+    "Beleza", "Saúde", "Educação", "Roupas", "Outros"
+]
+
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    categoria = st.text_input("Categoria")
+    categoria = st.selectbox("Categoria", categorias_opcoes)
     tipo = st.radio("Tipo", ["Gasto", "Entrada"])
     enviar = st.form_submit_button("Registrar")
 
 if enviar:
-    if descricao and valor != 0 and categoria:
+    if descricao and valor != 0:
         sinal = 1 if tipo == "Entrada" else -1
         valor_final = round(valor * sinal, 2)
         data = datetime.now().strftime("%d/%m/%Y")
-        add_lancamento(data, descricao.capitalize(), valor_final, categoria.capitalize())
+        add_lancamento(data, descricao.capitalize(), valor_final, categoria)
         st.success(f"{tipo} registrada com sucesso!")
         st.rerun()
     else:
@@ -70,7 +73,7 @@ if not df.empty:
         col1.write(df.at[i, "Data"])
         col2.write(df.at[i, "Descrição"])
         valor = pd.to_numeric(df.at[i, 'Valor (R$)'], errors='coerce')
-        col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))  # ex: 1.234,56
+        col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
         col4.write(df.at[i, "Categoria"])
         if col5.button("🗑️", key=f"delete_{i}"):
             excluir_linha(i)
