@@ -45,9 +45,6 @@ def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     valor_str = f"{valor:.2f}".replace(",", ".")
     sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
 
-def excluir_linha(sheet_mes, index):
-    sheet_mes.delete_rows(index + 1)
-
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
     senha = st.secrets["email_pass"]
@@ -161,9 +158,14 @@ if not df_historico.empty:
             aba_nome = df_historico.at[i, "Aba"]
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
             linha_idx = df_historico.at[i, "LinhaIndex"]
-            if isinstance(linha_idx, int) and linha_idx >= 1:
-                aba.delete_rows(linha_idx + 1)
-                st.success(f"Registro excluído da aba {aba_nome}!")
-                st.rerun()
+            valores_aba = aba.get_all_values()
+            if isinstance(linha_idx, int) and linha_idx < len(valores_aba):
+                linha_conteudo = valores_aba[linha_idx]
+                if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
+                    aba.delete_rows(linha_idx + 1)
+                    st.success(f"Registro excluído da aba {aba_nome}!")
+                    st.rerun()
+                else:
+                    st.error("Linha vazia ou incompleta — nada excluído.")
             else:
                 st.error(f"Erro: índice inválido para exclusão ({linha_idx})")
