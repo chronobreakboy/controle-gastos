@@ -39,7 +39,8 @@ def mes_formatado(dt):
 def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     sheet_mes = obter_aba_mes(aba)
     headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
-    if not sheet_mes.get_all_values():
+    todas = sheet_mes.get_all_values()
+    if not todas or todas[0] != headers:
         sheet_mes.insert_row(headers, index=1)
     valor_str = f"{valor:.2f}".replace(",", ".")
     sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
