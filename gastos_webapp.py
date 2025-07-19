@@ -164,6 +164,10 @@ def carregar_tudo():
 df_historico = carregar_tudo()
 
 if not df_historico.empty:
+    aba_atual = mes_formatado(datetime.now())
+    total_atual = df_historico[df_historico['Aba'] == aba_atual]['Valor (R$)'].sum()
+    st.metric(label=f"Saldo total de {aba_atual}", value=f"R$ {total_atual:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
+
     for i in df_historico.index:
         col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 2, 3, 2, 1])
         col1.write(df_historico.at[i, "Data"])
