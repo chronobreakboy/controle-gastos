@@ -62,10 +62,8 @@ def calcular_primeira_fatura(data_compra, fechamento, vencimento):
     if data_compra <= fechamento_date:
         vencimento_date = datetime(ano, mes, vencimento)
     else:
-        if mes == 12:
-            vencimento_date = datetime(ano + 1, 1, vencimento)
-        else:
-            vencimento_date = datetime(ano, mes + 1, vencimento)
+        proximo_mes = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
+        vencimento_date = proximo_mes.replace(day=vencimento)
     return vencimento_date
 
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
@@ -90,7 +88,7 @@ if tipo == "Gasto":
     credito = st.checkbox("Compra no crédito?")
     if credito:
         cartao = st.selectbox("Cartão", list(cartoes.keys()))
-        parcelas = st.slider("Parcelas", 1, 18, 1)
+        parcelas = st.slider("Parcelas", 1, 12, 1)
 
 if st.button("Registrar"):
     if categoria == "Selecione..." or not descricao or valor == 0:
