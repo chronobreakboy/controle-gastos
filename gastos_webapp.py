@@ -59,10 +59,10 @@ else:
     categoria = st.selectbox("Categoria", ["Selecione..."] + categorias_entrada, index=0)
 
 # Descrição e valor
-descricao_default = "🥵🥵🥵🥵🤤🤤🤤🤤🤤" if tipo == "Entrada" and categoria == "Caixa 2" else ""
+descricao_default = "🥵🥵🥵🥵 minha putinha perfeita 🤤🤤🤤🤤🤤" if tipo == "Entrada" and categoria == "Caixa 2" else ""
 descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
 descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
-valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
+valor = st.number_input("Valor", step=0.01, format="%.2f")
 
 # Botão
 if st.button("Registrar"):
