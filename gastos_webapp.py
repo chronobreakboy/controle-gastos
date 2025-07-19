@@ -92,10 +92,12 @@ if st.button("Registrar"):
             info = cartoes.get(cartao)
             if info:
                 fechamento = info["fechamento"]
-                if data_compra.day > fechamento:
-                    primeira_fatura = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
+                hoje = data_compra
+                fatura_atual = (hoje.replace(day=1) + timedelta(days=32)).replace(day=1)
+                if hoje.day > fechamento:
+                    primeira_fatura = (fatura_atual + timedelta(days=32)).replace(day=1)
                 else:
-                    primeira_fatura = data_compra.replace(day=1)
+                    primeira_fatura = fatura_atual
                 valor_parcela = round(valor_final / parcelas, 2)
                 for i in range(parcelas):
                     data_parcela = (primeira_fatura + pd.DateOffset(months=i)).to_pydatetime()
