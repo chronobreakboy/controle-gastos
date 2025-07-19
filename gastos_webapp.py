@@ -41,6 +41,7 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
+# Categorias fixas
 categorias_gasto_base = [
     "Alimentação", "Bebê", "Beleza", "Casa", "Educação",
     "Lazer", "Pets", "Roupas", "Saúde", "Transporte"
@@ -48,20 +49,29 @@ categorias_gasto_base = [
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 
+# Estado do tipo
+if "tipo" not in st.session_state:
+    st.session_state.tipo = "Gasto"
+
+def ao_mudar_tipo():
+    st.session_state.tipo = st.session_state["tipo_radio"]
+    st.experimental_rerun()
+
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    tipo = st.radio("Tipo", ["Gasto", "Entrada"])
-    categoria = st.selectbox("Categoria", categorias_gasto if tipo == "Gasto" else categorias_entrada)
+    st.radio("Tipo", ["Gasto", "Entrada"], key="tipo_radio", index=["Gasto", "Entrada"].index(st.session_state.tipo), on_change=ao_mudar_tipo)
+    opcoes_categoria = categorias_gasto if st.session_state.tipo == "Gasto" else categorias_entrada
+    categoria = st.selectbox("Categoria", opcoes_categoria, key="categoria")
     enviar = st.form_submit_button("Registrar")
 
 if enviar:
     if descricao and valor != 0:
-        sinal = 1 if tipo == "Entrada" else -1
+        sinal = 1 if st.session_state.tipo == "Entrada" else -1
         valor_final = round(valor * sinal, 2)
         data = datetime.now().strftime("%d/%m/%Y")
         add_lancamento(data, descricao.capitalize(), valor_final, categoria)
-        st.success(f"{tipo} registrada com sucesso!")
+        st.success(f"{st.session_state.tipo} registrada com sucesso!")
         st.rerun()
     else:
         st.warning("Preencha todos os campos!")
