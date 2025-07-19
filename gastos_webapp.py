@@ -41,36 +41,42 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
-# Estado inicial
-if "tipo" not in st.session_state:
-    st.session_state.tipo = "Gasto"
-
-# Radio fora do form pra atualizar dinamicamente
-tipo = st.radio("Tipo", ["Gasto", "Entrada"], key="tipo")
-categorias = sorted([
+categorias_gasto_base = [
     "Alimentação", "Bebê", "Beleza", "Casa", "Educação",
     "Lazer", "Pets", "Roupas", "Saúde", "Transporte"
-]) + ["Outros"] if tipo == "Gasto" else ["Salário", "Caixa 2"]
+]
+categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
+categorias_entrada = ["Salário", "Caixa 2"]
 
-# === FORMULÁRIO ===
-with st.form("form_lancamento"):
-    descricao = st.text_input("Descrição")
-    valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    categoria = st.selectbox("Categoria", categorias, index=None, placeholder="Selecione...")
-    enviar = st.form_submit_button("Registrar")
+# Tipo de lançamento
+tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 
-if enviar:
-    if descricao and valor != 0 and categoria:
+# Categoria primeiro
+categoria = None
+if tipo == "Gasto":
+    categoria = st.selectbox("Categoria", ["Selecione..."] + categorias_gasto, index=0)
+else:
+    categoria = st.selectbox("Categoria", ["Selecione..."] + categorias_entrada, index=0)
+
+# Descrição e valor
+descricao_default = "🥵🥵🥵🥵🤤🤤🤤🤤🤤" if tipo == "Entrada" and categoria == "Caixa 2" else ""
+descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
+descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
+valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
+
+# Botão
+if st.button("Registrar"):
+    if categoria == "Selecione..." or not descricao or valor == 0:
+        st.warning("Preencha todos os campos corretamente!")
+    else:
         sinal = 1 if tipo == "Entrada" else -1
         valor_final = round(valor * sinal, 2)
         data = datetime.now().strftime("%d/%m/%Y")
-        add_lancamento(data, descricao.capitalize(), valor_final, categoria)
+        add_lancamento(data, descricao, valor_final, categoria)
         st.success(f"{tipo} registrada com sucesso!")
         st.rerun()
-    else:
-        st.warning("Preencha todos os campos corretamente!")
 
-# === LISTA DE LANÇAMENTOS ===
+# Exibição dos dados
 df = get_dataframe()
 if not df.empty:
     st.subheader("📋 Últimos lançamentos")
