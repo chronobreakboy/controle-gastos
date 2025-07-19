@@ -5,13 +5,25 @@ from datetime import datetime
 import json, os
 from oauth2client.service_account import ServiceAccountCredentials
 
-# === CONFIGURAÇÃO DO GOOGLE SHEETS ===
+# === CONFIG GOOGLE SHEETS ===
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA/edit?hl=pt-br"
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = json.loads(os.environ["credentials"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_url(SHEET_URL).sheet1
+
+# === GARANTIR CABEÇALHO ===
+def garantir_cabecalho():
+    headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
+    registros = sheet.get_all_records()
+    if not registros:
+        sheet.insert_row(headers, index=1)
+    elif sheet.row_values(1) != headers:
+        sheet.delete_rows(1)
+        sheet.insert_row(headers, index=1)
+
+garantir_cabecalho()
 
 # === FUNÇÕES AUXILIARES ===
 def get_dataframe():
@@ -26,7 +38,7 @@ def excluir_linha(index):
 
 # === INTERFACE ===
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
-st.title("💸 Controle de Gastos Diários 💖")
+st.title("💸 Controle de Gastos Diários 💔")
 
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
@@ -53,7 +65,7 @@ if not df.empty:
         col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 3, 1])
         col1.write(df.at[i, "Data"])
         col2.write(df.at[i, "Descrição"])
-        col3.write(f"R$ {df.at[i, 'Valor (R$)']}")
+        col3.write(f"R$ {df.at[i, 'Valor (R$)']:.2f}".replace('.', ','))
         col4.write(df.at[i, "Categoria"])
         if col5.button("🗑️", key=f"delete_{i}"):
             excluir_linha(i)
@@ -61,4 +73,5 @@ if not df.empty:
             st.rerun()
 
     total = df["Valor (R$)"].sum()
-    st.metric("💰 Saldo atual", f"R$ {total:,.2f}")
+    saldo_formatado = f"R$ {total:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',')
+    st.metric("💰 Saldo atual", saldo_formatado)
