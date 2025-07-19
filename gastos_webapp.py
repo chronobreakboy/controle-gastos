@@ -55,17 +55,18 @@ def enviar_email(para, assunto, corpo):
         server.login(user, senha)
         server.sendmail(user, para, msg.as_string())
 
-def calcular_primeira_fatura(data_compra, fechamento):
+def calcular_primeira_fatura(data_compra, fechamento, vencimento):
     ano = data_compra.year
     mes = data_compra.month
     fechamento_date = datetime(ano, mes, fechamento)
     if data_compra <= fechamento_date:
-        return datetime(ano, mes, 1)
+        vencimento_date = datetime(ano, mes, vencimento)
     else:
         if mes == 12:
-            return datetime(ano + 1, 1, 1)
+            vencimento_date = datetime(ano + 1, 1, vencimento)
         else:
-            return datetime(ano, mes + 1, 1)
+            vencimento_date = datetime(ano, mes + 1, vencimento)
+    return vencimento_date
 
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
@@ -104,7 +105,8 @@ if st.button("Registrar"):
             info = cartoes.get(cartao)
             if info:
                 fechamento = info["fechamento"]
-                primeira_fatura = calcular_primeira_fatura(data_compra, fechamento)
+                vencimento = info["vencimento"]
+                primeira_fatura = calcular_primeira_fatura(data_compra, fechamento, vencimento)
                 valor_parcela = round(valor_final / parcelas, 2)
                 for i in range(parcelas):
                     data_parcela = (primeira_fatura + pd.DateOffset(months=i)).to_pydatetime()
