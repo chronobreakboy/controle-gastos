@@ -6,13 +6,13 @@ import json, os
 import smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
-
-# === COOKIES ===
-os.environ["COOKIE_PASSWORD"] = st.secrets["COOKIE_PASSWORD"]
-if "COOKIE_KEY" in st.secrets:
-    os.environ["COOKIE_KEY"] = st.secrets["COOKIE_KEY"]
-
 from streamlit_cookies_manager import EncryptedCookieManager
+
+# === COOKIES (com set_key_and_password) ===
+EncryptedCookieManager.set_key_and_password(
+    key=st.secrets["COOKIE_KEY"],
+    password=st.secrets["COOKIE_PASSWORD"]
+)
 cookies = EncryptedCookieManager(prefix="gastinhos_")
 if not cookies.ready():
     st.stop()
@@ -79,8 +79,8 @@ else:
     st.stop()
 
 # === EMAILS ===
-email_juliana = "cogumelodosol1@gmail.com"
-email_robson = "jucristinegava@gmail.com"
+email_juliana = "jucristinegava@gmail.com"
+email_robson = "cogumelodosol1@gmail.com"
 
 categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
@@ -111,9 +111,9 @@ if st.button("Registrar"):
 
         # E-mail
         if usuario == "daddy":
-            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"Usuário: daddy\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
+            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"Usuário: daddy\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
         elif usuario.startswith("baby"):
-            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"Usuário: baby girl ❤️‍🔥\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
+            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"Usuário: baby girl ❤️‍🔥\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
 
         st.rerun()
 
