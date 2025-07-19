@@ -39,29 +39,20 @@ def excluir_linha(index):
 
 # === INTERFACE ===
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
-st.title("💸 Controle de Gastos Diários 💔")
+st.title("💸 Controle de Gastos Diários 💸")
 
-# Categorias fixas (ordenadas alfabeticamente, com "Outros" por último)
-categorias_base = [
-    "Alimentação",
-    "Bebê",
-    "Beleza",
-    "Casa",
-    "Educação",
-    "Lazer",
-    "Pets",
-    "Roupas",
-    "Saúde",
-    "Transporte"
+categorias_gasto_base = [
+    "Alimentação", "Bebê", "Beleza", "Casa", "Educação",
+    "Lazer", "Pets", "Roupas", "Saúde", "Transporte"
 ]
-categorias_opcoes = sorted(categorias_base) + ["Outros"]
-
+categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
+categorias_entrada = ["Salário", "Caixa 2"]
 
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    categoria = st.selectbox("Categoria", categorias_opcoes)
     tipo = st.radio("Tipo", ["Gasto", "Entrada"])
+    categoria = st.selectbox("Categoria", categorias_gasto if tipo == "Gasto" else categorias_entrada)
     enviar = st.form_submit_button("Registrar")
 
 if enviar:
