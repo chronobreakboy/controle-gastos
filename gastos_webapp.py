@@ -58,20 +58,15 @@ def enviar_email(para, assunto, corpo):
 def calcular_primeira_fatura(data_compra, fechamento, vencimento):
     ano = data_compra.year
     mes = data_compra.month
-    data_fechamento = datetime(ano, mes, fechamento)
-    if data_compra <= data_fechamento:
-        venc_mes = mes + 1
-        venc_ano = ano
-        if venc_mes > 12:
-            venc_mes = 1
-            venc_ano += 1
+    dia = data_compra.day
+    if dia <= fechamento:
+        mes_venc = mes + 1
     else:
-        venc_mes = mes + 2
-        venc_ano = ano
-        if venc_mes > 12:
-            venc_mes -= 12
-            venc_ano += 1
-    return datetime(venc_ano, venc_mes, vencimento)
+        mes_venc = mes + 2
+    if mes_venc > 12:
+        mes_venc -= 12
+        ano += 1
+    return datetime(ano, mes_venc, vencimento)
 
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
