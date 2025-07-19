@@ -3,6 +3,8 @@ import pandas as pd
 import gspread
 from datetime import datetime
 import json, os
+import smtplib
+from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
 
 # === CONFIG GOOGLE SHEETS ===
@@ -12,6 +14,18 @@ creds_dict = json.loads(os.environ["credentials"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 sheet = client.open_by_url(SHEET_URL).sheet1
+
+# === EMAIL ===
+def enviar_email(para, assunto, corpo):
+    user = st.secrets["email_user"]
+    senha = st.secrets["email_pass"]
+    msg = MIMEText(corpo, "plain", "utf-8")
+    msg["Subject"] = assunto
+    msg["From"] = user
+    msg["To"] = para
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(user, senha)
+        server.sendmail(user, para, msg.as_string())
 
 # === GARANTIR CABEÇALHO ===
 def garantir_cabecalho():
@@ -41,10 +55,15 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
-categorias_gasto_base = [
-    "Alimentação", "Bebê", "Beleza", "Casa", "Educação",
-    "Lazer", "Pets", "Roupas", "Saúde", "Transporte"
-]
+# === USUÁRIO ===
+usuario = st.selectbox("Quem tá usando?", ["Selecione...", "daddy", "baby girl"])
+if usuario == "Selecione...":
+    st.stop()
+
+email_juliana = "cogumelodosol1@gmail.com"
+email_robson = "jucristinegava@gmail.com"
+
+categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 
@@ -52,11 +71,7 @@ categorias_entrada = ["Salário", "Caixa 2"]
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 
 # Categoria primeiro
-categoria = None
-if tipo == "Gasto":
-    categoria = st.selectbox("Categoria", ["Selecione..."] + categorias_gasto, index=0)
-else:
-    categoria = st.selectbox("Categoria", ["Selecione..."] + categorias_entrada, index=0)
+categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 
 # Descrição e valor
 descricao_default = "🥵🥵🥵🥵 minha putinha perfeita 🤤🤤🤤🤤🤤" if tipo == "Entrada" and categoria == "Caixa 2" else ""
@@ -74,6 +89,13 @@ if st.button("Registrar"):
         data = datetime.now().strftime("%d/%m/%Y")
         add_lancamento(data, descricao, valor_final, categoria)
         st.success(f"{tipo} registrada com sucesso!")
+        
+        # Enviar e-mail
+        if usuario == "daddy":
+            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        elif usuario == "baby girl":
+            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        
         st.rerun()
 
 # Exibição dos dados
