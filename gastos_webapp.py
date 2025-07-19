@@ -6,16 +6,6 @@ import json, os
 import smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
-from streamlit_cookies_manager import EncryptedCookieManager
-
-# === COOKIES (versão 0.2.0) ===
-cookies = EncryptedCookieManager(
-    password=st.secrets["COOKIE_PASSWORD"],
-    key=st.secrets["COOKIE_KEY"],
-    prefix="gastinhos_"
-)
-if not cookies.ready():
-    st.stop()
 
 # === CONFIG GOOGLE SHEETS ===
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA/edit?hl=pt-br"
@@ -66,21 +56,12 @@ st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
 # === USUÁRIO ===
-usuario_salvo = cookies.get("usuario")
-opcoes = ["daddy", "baby girl ❤️‍🔥"]
-usuario = st.selectbox("Quem tá usando?", ["Selecione..."] + opcoes, index=(opcoes.index(usuario_salvo) + 1 if usuario_salvo in opcoes else 0))
-
-if usuario != "Selecione...":
-    lembrar = st.checkbox("Lembrar no meu navegador", value=cookies.get("usuario") == usuario)
-    if lembrar:
-        cookies["usuario"] = usuario
-        cookies.save()
-else:
+usuario = st.selectbox("Quem tá usando?", ["Selecione...", "daddy", "baby girl"])
+if usuario == "Selecione...":
     st.stop()
 
-# === EMAILS ===
-email_juliana = "jucristinegava@gmail.com"
-email_robson = "cogumelodosol1@gmail.com"
+email_juliana = "cogumelodosol1@gmail.com"
+email_robson = "jucristinegava@gmail.com"
 
 categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
@@ -89,7 +70,7 @@ categorias_entrada = ["Salário", "Caixa 2"]
 # Tipo de lançamento
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 
-# Categoria
+# Categoria primeiro
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 
 # Descrição e valor
@@ -108,16 +89,16 @@ if st.button("Registrar"):
         data = datetime.now().strftime("%d/%m/%Y")
         add_lancamento(data, descricao, valor_final, categoria)
         st.success(f"{tipo} registrada com sucesso!")
-
-        # E-mail invertido
+        
+        # Enviar e-mail
         if usuario == "daddy":
-            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"Usuário: daddy\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
-        elif usuario.startswith("baby"):
-            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"Usuário: baby girl ❤️‍🔥\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
-
+            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        elif usuario == "baby girl":
+            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        
         st.rerun()
 
-# === EXIBIÇÃO DE DADOS ===
+# Exibição dos dados
 df = get_dataframe()
 if not df.empty:
     st.subheader("📋 Últimos lançamentos")
