@@ -28,7 +28,10 @@ garantir_cabecalho()
 # === FUNÇÕES AUXILIARES ===
 def get_dataframe():
     data = sheet.get_all_records()
-    return pd.DataFrame(data)
+    df = pd.DataFrame(data)
+    if not df.empty and "Valor (R$)" in df.columns:
+        df["Valor (R$)"] = pd.to_numeric(df["Valor (R$)"], errors="coerce").fillna(0)
+    return df
 
 def add_lancamento(data, descricao, valor, categoria):
     sheet.append_row([data, descricao, valor, categoria])
@@ -66,8 +69,7 @@ if not df.empty:
         col1.write(df.at[i, "Data"])
         col2.write(df.at[i, "Descrição"])
         valor = pd.to_numeric(df.at[i, 'Valor (R$)'], errors='coerce')
-        col3.write(f"R$ {valor:.2f}".replace('.', ',') if pd.notnull(valor) else "R$ 0,00")
-
+        col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))  # ex: 1.234,56
         col4.write(df.at[i, "Categoria"])
         if col5.button("🗑️", key=f"delete_{i}"):
             excluir_linha(i)
@@ -75,5 +77,5 @@ if not df.empty:
             st.rerun()
 
     total = df["Valor (R$)"].sum()
-    saldo_formatado = f"R$ {total:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',')
+    saldo_formatado = f"R$ {total:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',') if pd.notnull(total) else "R$ 0,00"
     st.metric("💰 Saldo atual", saldo_formatado)
