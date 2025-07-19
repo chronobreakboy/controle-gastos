@@ -84,7 +84,7 @@ if st.button("Registrar"):
         st.warning("Preencha todos os campos corretamente!")
     else:
         data_compra = datetime.now()
-        valor_final = -valor if tipo == "Gasto" and credito else valor
+        valor_final = valor if tipo == "Entrada" else -valor
         if tipo == "Entrada" or not credito:
             aba = mes_formatado(data_compra)
             add_lancamento_em_mes(data_compra, descricao, valor_final, categoria, aba)
@@ -105,7 +105,7 @@ if st.button("Registrar"):
             else:
                 st.warning("Cartão sem data configurada.")
         destinatario = email_robson if usuario == "baby girl" else email_juliana
-        enviar_email(destinatario, f"Novo {tipo.lower()} registrado por {usuario}", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        enviar_email(destinatario, f"Novo {tipo.lower()} registrado por {usuario}", f"{descricao} - R$ {valor_final:.2f} - {categoria}")
         st.success(f"{tipo} registrado com sucesso!")
         st.rerun()
 
@@ -133,7 +133,7 @@ def carregar_tudo():
                     "Categoria": linha[3],
                     "DataObj": data_obj,
                     "Aba": aba.title,
-                    "LinhaIndex": i
+                    "LinhaIndex": i - 1
                 })
             except:
                 continue
@@ -158,13 +158,14 @@ if not df_historico.empty:
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
             linha_idx = df_historico.at[i, "LinhaIndex"]
             valores_aba = aba.get_all_values()
-            if isinstance(linha_idx, int) and 0 < linha_idx < len(valores_aba):
-                linha_conteudo = valores_aba[linha_idx]
+            linha_planilha = linha_idx + 2
+            if 1 < linha_planilha <= len(valores_aba):
+                linha_conteudo = valores_aba[linha_planilha - 1]
                 if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
-                    aba.delete_rows(linha_idx + 1)
+                    aba.delete_rows(linha_planilha)
                     st.success(f"Registro excluído da aba {aba_nome}!")
                     st.rerun()
                 else:
                     st.error("Linha vazia ou incompleta — nada excluído.")
             else:
-                st.error(f"Erro: índice inválido para exclusão ({linha_idx})")
+                st.error(f"Erro: índice inválido para exclusão ({linha_planilha})")
