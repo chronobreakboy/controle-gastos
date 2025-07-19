@@ -49,26 +49,29 @@ categorias_gasto_base = [
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 
-# Limpar categoria se tipo mudar
+# Controle de estado manual
 if "tipo" not in st.session_state:
-    st.session_state.tipo = None
+    st.session_state.tipo = ""
 if "categoria" not in st.session_state:
     st.session_state.categoria = None
 
-def ao_mudar_tipo():
-    st.session_state.categoria = None
-
+# Formulário
 with st.form("form_gasto"):
+    tipo = st.radio("Tipo", ["Gasto", "Entrada"], key="tipo_radio")
+    
+    # Resetar categoria se mudou o tipo
+    if tipo != st.session_state.tipo:
+        st.session_state.tipo = tipo
+        st.session_state.categoria = None
+
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    
-    tipo = st.radio("Tipo", ["Gasto", "Entrada"], key="tipo", on_change=ao_mudar_tipo)
 
     categoria = None
-    if tipo == "Gasto":
-        categoria = st.selectbox("Categoria", categorias_gasto, index=None, placeholder="Selecione a categoria", key="categoria")
-    elif tipo == "Entrada":
-        categoria = st.selectbox("Categoria", categorias_entrada, index=None, placeholder="Selecione a categoria", key="categoria")
+    if st.session_state.tipo == "Gasto":
+        categoria = st.selectbox("Categoria", categorias_gasto, index=None, placeholder="Selecione...", key="categoria")
+    elif st.session_state.tipo == "Entrada":
+        categoria = st.selectbox("Categoria", categorias_entrada, index=None, placeholder="Selecione...", key="categoria")
 
     enviar = st.form_submit_button("Registrar")
 
@@ -83,7 +86,7 @@ if enviar:
     else:
         st.warning("Preencha todos os campos!")
 
-# === EXIBIÇÃO ===
+# Exibir últimos lançamentos
 df = get_dataframe()
 if not df.empty:
     st.subheader("📋 Últimos lançamentos")
