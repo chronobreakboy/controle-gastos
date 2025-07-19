@@ -8,12 +8,12 @@ from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
 from streamlit_cookies_manager import EncryptedCookieManager
 
-# === COOKIES (com set_key_and_password) ===
-EncryptedCookieManager.set_key_and_password(
+# === COOKIES (versão 0.2.0) ===
+cookies = EncryptedCookieManager(
+    password=st.secrets["COOKIE_PASSWORD"],
     key=st.secrets["COOKIE_KEY"],
-    password=st.secrets["COOKIE_PASSWORD"]
+    prefix="gastinhos_"
 )
-cookies = EncryptedCookieManager(prefix="gastinhos_")
 if not cookies.ready():
     st.stop()
 
@@ -109,7 +109,7 @@ if st.button("Registrar"):
         add_lancamento(data, descricao, valor_final, categoria)
         st.success(f"{tipo} registrada com sucesso!")
 
-        # E-mail
+        # E-mail invertido
         if usuario == "daddy":
             enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"Usuário: daddy\nDescrição: {descricao}\nValor: R$ {valor:.2f}\nCategoria: {categoria}")
         elif usuario.startswith("baby"):
