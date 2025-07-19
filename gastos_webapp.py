@@ -74,7 +74,7 @@ tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 
 # Descrição e valor
-descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
+descricao = st.text_input("Descrição")
 valor = st.number_input("Valor", step=0.01, format="%.2f")
 
 # Botão
