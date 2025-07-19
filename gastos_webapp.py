@@ -132,8 +132,7 @@ def carregar_tudo():
                     "Valor (R$)": valor_float,
                     "Categoria": linha[3],
                     "DataObj": data_obj,
-                    "Aba": aba.title,
-                    "LinhaIndex": i
+                    "Aba": aba.title
                 })
             except:
                 continue
@@ -156,15 +155,27 @@ if not df_historico.empty:
         if col6.button("🗑️", key=f"delete_global_{i}"):
             aba_nome = df_historico.at[i, "Aba"]
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
-            linha_idx = df_historico.at[i, "LinhaIndex"]
             valores_aba = aba.get_all_values()
-            if isinstance(linha_idx, int) and 0 < linha_idx < len(valores_aba):
-                linha_conteudo = valores_aba[linha_idx]
-                if len(linha_conteudo) >= 4 and any(c.strip() for c in linha_conteudo):
-                    aba.delete_rows(linha_idx + 1)
-                    st.success(f"Registro excluído da aba {aba_nome}!")
-                    st.rerun()
-                else:
-                    st.error("Linha vazia ou incompleta — nada excluído.")
+
+            alvo_data = df_historico.at[i, "Data"]
+            alvo_desc = df_historico.at[i, "Descrição"]
+            alvo_valor = f"{df_historico.at[i, 'Valor (R$)']:.2f}"
+            alvo_categoria = df_historico.at[i, "Categoria"]
+
+            linha_excluir = None
+            for idx, linha in enumerate(valores_aba[1:], start=2):
+                if len(linha) >= 4:
+                    valor_normalizado = linha[2].replace(",", ".")
+                    if (linha[0] == alvo_data and
+                        linha[1] == alvo_desc and
+                        valor_normalizado == alvo_valor and
+                        linha[3] == alvo_categoria):
+                        linha_excluir = idx
+                        break
+
+            if linha_excluir:
+                aba.delete_rows(linha_excluir)
+                st.success(f"Registro excluído da aba {aba_nome}!")
+                st.rerun()
             else:
-                st.error(f"Erro: índice inválido para exclusão ({linha_idx})")
+                st.error("Não foi possível localizar a linha para excluir.")
