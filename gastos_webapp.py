@@ -45,6 +45,9 @@ def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     valor_str = f"{valor:.2f}".replace(",", ".")
     sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
 
+def excluir_linha(sheet_mes, index):
+    sheet_mes.delete_rows(index + 2)
+
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
     senha = st.secrets["email_pass"]
@@ -104,8 +107,49 @@ if st.button("Registrar"):
                     add_lancamento_em_mes(data_parcela, descricao_parcela, valor_parcela, categoria, aba)
             else:
                 st.warning("Cartão sem data configurada.")
-
         destinatario = email_robson if usuario == "baby girl" else email_juliana
         enviar_email(destinatario, f"Novo {tipo.lower()} registrado por {usuario}", f"{descricao} - R$ {valor:.2f} - {categoria}")
         st.success(f"{tipo} registrado com sucesso!")
         st.rerun()
+
+# === EXIBE HISTÓRICO DE TODAS AS ABAS ===
+st.subheader("📚 Histórico completo")
+
+def carregar_tudo():
+    planilha = client.open_by_url(SHEET_URL)
+    abas = planilha.worksheets()
+    dados = []
+    for aba in abas:
+        valores = aba.get_all_records()
+        for i, linha in enumerate(valores):
+            if "Data" in linha and "Valor (R$)" in linha:
+                try:
+                    data_obj = datetime.strptime(linha["Data"], "%d/%m/%Y")
+                    linha["DataObj"] = data_obj
+                    linha["Aba"] = aba.title
+                    linha["LinhaIndex"] = i
+                    dados.append(linha)
+                except:
+                    continue
+    df = pd.DataFrame(dados)
+    if not df.empty:
+        df = df.sort_values("DataObj", ascending=False).reset_index(drop=True)
+    return df
+
+df_historico = carregar_tudo()
+
+if not df_historico.empty:
+    for i in df_historico.index:
+        col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 2, 3, 2, 1])
+        col1.write(df_historico.at[i, "Data"])
+        col2.write(df_historico.at[i, "Descrição"])
+        valor = pd.to_numeric(df_historico.at[i, 'Valor (R$)'], errors='coerce')
+        col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
+        col4.write(df_historico.at[i, "Categoria"])
+        col5.write(f"Aba: {df_historico.at[i, 'Aba']}")
+        if col6.button("🗑️", key=f"delete_global_{i}"):
+            aba_nome = df_historico.at[i, "Aba"]
+            aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
+            aba.delete_rows(df_historico.at[i, "LinhaIndex"] + 2)
+            st.success(f"Registro excluído da aba {aba_nome}!")
+            st.rerun()
