@@ -58,11 +58,11 @@ def enviar_email(para, assunto, corpo):
 def calcular_primeira_fatura(data_compra, fechamento, vencimento):
     ano = data_compra.year
     mes = data_compra.month
-    fechamento_date = datetime(ano, mes, fechamento)
-    if data_compra <= fechamento_date:
+    data_fechamento = datetime(ano, mes, fechamento)
+    if data_compra <= data_fechamento:
         vencimento_date = datetime(ano, mes, vencimento)
     else:
-        proximo_mes = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
+        proximo_mes = (data_fechamento + timedelta(days=1)).replace(day=1) + timedelta(days=31)
         vencimento_date = proximo_mes.replace(day=vencimento)
     return vencimento_date
 
