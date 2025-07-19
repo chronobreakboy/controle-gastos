@@ -41,11 +41,21 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💔")
 
-# Categorias fixas
-categorias_opcoes = [
-    "Alimentação", "Transporte", "Bebê", "Lazer", "Casa",
-    "Beleza", "Saúde", "Educação", "Roupas", "Outros"
+# Categorias fixas (ordenadas alfabeticamente, com "Outros" por último)
+categorias_base = [
+    "Alimentação",
+    "Bebê",
+    "Beleza",
+    "Casa",
+    "Educação",
+    "Lazer",
+    "Pets",
+    "Roupas",
+    "Saúde",
+    "Transporte"
 ]
+categorias_opcoes = sorted(categorias_base) + ["Outros"]
+
 
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
