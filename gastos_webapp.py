@@ -34,7 +34,8 @@ def get_dataframe():
     return df
 
 def add_lancamento(data, descricao, valor, categoria):
-    sheet.append_row([data, descricao, valor, categoria])
+    valor_str = f"{valor:.2f}".replace(",", ".")  # força separador de decimal com ponto
+    sheet.append_row([data, descricao, valor_str, categoria])
 
 def excluir_linha(index):
     sheet.delete_rows(index + 2)
