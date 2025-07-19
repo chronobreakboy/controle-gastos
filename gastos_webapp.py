@@ -60,8 +60,8 @@ usuario = st.selectbox("Quem tá usando?", ["Selecione...", "daddy", "baby girl"
 if usuario == "Selecione...":
     st.stop()
 
-email_juliana = "cogumelodosol1@gmail.com"
-email_robson = "jucristinegava@gmail.com"
+email_juliana = "jucristinegava@gmail.com"
+email_robson = "cogumelodosol1@gmail.com"
 
 categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
@@ -74,8 +74,6 @@ tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 
 # Descrição e valor
-descricao_default = "🥵🥵🥵🥵 minha putinha perfeita 🤤🤤🤤🤤🤤" if tipo == "Entrada" and categoria == "Caixa 2" else ""
-descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
 descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
 valor = st.number_input("Valor", step=0.01, format="%.2f")
 
@@ -91,9 +89,9 @@ if st.button("Registrar"):
         st.success(f"{tipo} registrada com sucesso!")
         
         # Enviar e-mail
-        if usuario == "daddy":
+        if usuario == "baby girl":
             enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"{descricao} - R$ {valor:.2f} - {categoria}")
-        elif usuario == "baby girl":
+        elif usuario == "daddy":
             enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"{descricao} - R$ {valor:.2f} - {categoria}")
         
         st.rerun()
