@@ -46,7 +46,7 @@ def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
 
 def excluir_linha(sheet_mes, index):
-    sheet_mes.delete_rows(index + 2)
+    sheet_mes.delete_rows(index + 1)
 
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
@@ -120,20 +120,25 @@ def carregar_tudo():
     abas = planilha.worksheets()
     dados = []
     for aba in abas:
-        valores = aba.get_all_records()
-        for i, linha in enumerate(valores):
+        valores = aba.get_all_values()
+        if not valores or valores[0] != ["Data", "Descrição", "Valor (R$)", "Categoria"]:
+            continue
+        for i in range(1, len(valores)):  # pula cabeçalho
+            linha = valores[i]
+            if len(linha) < 4:
+                continue
             try:
-                data_raw = linha.get("Data")
-                valor_raw = linha.get("Valor (R$)")
-                if not data_raw or not valor_raw:
-                    continue
-                data_obj = datetime.strptime(data_raw, "%d/%m/%Y")
-                valor_float = float(str(valor_raw).replace(",", "."))
-                linha["DataObj"] = data_obj
-                linha["Valor (R$)"] = valor_float
-                linha["Aba"] = aba.title
-                linha["LinhaIndex"] = i
-                dados.append(linha)
+                data_obj = datetime.strptime(linha[0], "%d/%m/%Y")
+                valor_float = float(str(linha[2]).replace(",", "."))
+                dados.append({
+                    "Data": linha[0],
+                    "Descrição": linha[1],
+                    "Valor (R$)": valor_float,
+                    "Categoria": linha[3],
+                    "DataObj": data_obj,
+                    "Aba": aba.title,
+                    "LinhaIndex": i
+                })
             except:
                 continue
     df = pd.DataFrame(dados)
@@ -156,9 +161,9 @@ if not df_historico.empty:
             aba_nome = df_historico.at[i, "Aba"]
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
             linha_idx = df_historico.at[i, "LinhaIndex"]
-            if isinstance(linha_idx, int):
-                aba.delete_rows(linha_idx + 2)
+            if isinstance(linha_idx, int) and linha_idx >= 1:
+                aba.delete_rows(linha_idx + 1)
                 st.success(f"Registro excluído da aba {aba_nome}!")
                 st.rerun()
             else:
-                st.error(f"Erro: índice inválido ({linha_idx})")
+                st.error(f"Erro: índice inválido para exclusão ({linha_idx})")
