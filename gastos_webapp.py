@@ -49,20 +49,17 @@ categorias_gasto_base = [
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 
-# Estado do tipo
+# Tipo fora do form para ser reativo
 if "tipo" not in st.session_state:
     st.session_state.tipo = "Gasto"
+st.session_state.tipo = st.radio("Tipo", ["Gasto", "Entrada"], index=["Gasto", "Entrada"].index(st.session_state.tipo))
 
-def ao_mudar_tipo():
-    st.session_state.tipo = st.session_state["tipo_radio"]
-    st.experimental_rerun()
-
+# Formulário
 with st.form("form_gasto"):
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-    st.radio("Tipo", ["Gasto", "Entrada"], key="tipo_radio", index=["Gasto", "Entrada"].index(st.session_state.tipo), on_change=ao_mudar_tipo)
     opcoes_categoria = categorias_gasto if st.session_state.tipo == "Gasto" else categorias_entrada
-    categoria = st.selectbox("Categoria", opcoes_categoria, key="categoria")
+    categoria = st.selectbox("Categoria", opcoes_categoria)
     enviar = st.form_submit_button("Registrar")
 
 if enviar:
