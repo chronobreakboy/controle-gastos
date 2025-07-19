@@ -1,21 +1,49 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime
+from datetime import datetime, timedelta
 import json, os
 import smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
 
-# === CONFIG GOOGLE SHEETS ===
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA/edit?hl=pt-br"
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = json.loads(os.environ["credentials"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
-sheet = client.open_by_url(SHEET_URL).sheet1
 
-# === EMAIL ===
+cartoes = {
+    "Credz": {"fechamento": 27, "vencimento": 1},
+    "Nubank Robson": {"fechamento": 28, "vencimento": 4},
+    "PicPay": {"fechamento": 27, "vencimento": 5},
+    "C&A": {"fechamento": 25, "vencimento": 8},
+    "Renner": None,
+    "Shopee": {"fechamento": 31, "vencimento": 10},
+    "Pernambucanas": {"fechamento": 6, "vencimento": 11},
+    "Mercado Pago": {"fechamento": 9, "vencimento": 14},
+    "Palmeiras": {"fechamento": 15, "vencimento": 21},
+    "Mais": None,
+    "Nubank Juliana": {"fechamento": 20, "vencimento": 27}
+}
+
+def obter_aba_mes(mes_ano):
+    try:
+        return client.open_by_url(SHEET_URL).worksheet(mes_ano)
+    except:
+        return client.open_by_url(SHEET_URL).add_worksheet(title=mes_ano, rows="1000", cols="10")
+
+def mes_formatado(dt):
+    return dt.strftime("%b/%Y").capitalize()
+
+def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
+    sheet_mes = obter_aba_mes(aba)
+    headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
+    if not sheet_mes.get_all_values():
+        sheet_mes.insert_row(headers, index=1)
+    valor_str = f"{valor:.2f}".replace(",", ".")
+    sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
+
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
     senha = st.secrets["email_pass"]
@@ -27,38 +55,11 @@ def enviar_email(para, assunto, corpo):
         server.login(user, senha)
         server.sendmail(user, para, msg.as_string())
 
-# === GARANTIR CABEÇALHO ===
-def garantir_cabecalho():
-    headers = ["Data", "Descrição", "Valor (R$)", "Categoria"]
-    todas = sheet.get_all_values()
-    if not todas or headers not in todas:
-        sheet.insert_row(headers, index=1)
-
-garantir_cabecalho()
-
-# === FUNÇÕES AUXILIARES ===
-def get_dataframe():
-    data = sheet.get_all_records()
-    df = pd.DataFrame(data)
-    if not df.empty and "Valor (R$)" in df.columns:
-        df["Valor (R$)"] = pd.to_numeric(df["Valor (R$)"], errors="coerce").fillna(0)
-    return df
-
-def add_lancamento(data, descricao, valor, categoria):
-    valor_str = f"{valor:.2f}".replace(",", ".")
-    sheet.append_row([data, descricao, valor_str, categoria])
-
-def excluir_linha(index):
-    sheet.delete_rows(index + 2)
-
-# === INTERFACE ===
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
-# === USUÁRIO ===
 usuario = st.selectbox("Quem tá usando?", ["Selecione...", "daddy", "baby girl"])
-if usuario == "Selecione...":
-    st.stop()
+if usuario == "Selecione...": st.stop()
 
 email_juliana = "jucristinegava@gmail.com"
 email_robson = "cogumelodosol1@gmail.com"
@@ -66,52 +67,44 @@ email_robson = "cogumelodosol1@gmail.com"
 categorias_gasto_base = ["Alimentação", "Bebê", "Beleza", "Casa", "Educação", "Lazer", "Pets", "Roupas", "Saúde", "Transporte"]
 categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
-
-# Tipo de lançamento
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
-
-# Categoria primeiro
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
-
-# Descrição e valor
 descricao = st.text_input("Descrição")
 valor = st.number_input("Valor", step=0.01, format="%.2f")
 
-# Botão
+credito = False
+if tipo == "Gasto":
+    credito = st.checkbox("Compra no crédito?")
+    if credito:
+        cartao = st.selectbox("Cartão", list(cartoes.keys()))
+        parcelas = st.slider("Parcelas", 1, 18, 1)
+
 if st.button("Registrar"):
     if categoria == "Selecione..." or not descricao or valor == 0:
         st.warning("Preencha todos os campos corretamente!")
     else:
-        sinal = 1 if tipo == "Entrada" else -1
-        valor_final = round(valor * sinal, 2)
-        data = datetime.now().strftime("%d/%m/%Y")
-        add_lancamento(data, descricao, valor_final, categoria)
-        st.success(f"{tipo} registrada com sucesso!")
-        
-        # Enviar e-mail
-        if usuario == "baby girl":
-            enviar_email(email_robson, "Novo gasto registrado pela Juliana", f"{descricao} - R$ {valor:.2f} - {categoria}")
-        elif usuario == "daddy":
-            enviar_email(email_juliana, "Novo gasto registrado pelo Robson", f"{descricao} - R$ {valor:.2f} - {categoria}")
-        
+        data_compra = datetime.now()
+        if tipo == "Entrada" or not credito:
+            aba = mes_formatado(data_compra)
+            add_lancamento_em_mes(data_compra, descricao, valor, categoria, aba)
+        else:
+            info = cartoes.get(cartao)
+            if info:
+                fechamento = info["fechamento"]
+                if data_compra.day > fechamento:
+                    primeira_fatura = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
+                else:
+                    primeira_fatura = data_compra.replace(day=1)
+                valor_parcela = round(valor / parcelas, 2)
+                for i in range(parcelas):
+                    data_parcela = (primeira_fatura + pd.DateOffset(months=i)).to_pydatetime()
+                    descricao_parcela = f"{descricao} ({i+1}/{parcelas}) - {cartao}"
+                    aba = mes_formatado(data_parcela)
+                    add_lancamento_em_mes(data_parcela, descricao_parcela, valor_parcela, categoria, aba)
+            else:
+                st.warning("Cartão sem data configurada.")
+
+        destinatario = email_robson if usuario == "baby girl" else email_juliana
+        enviar_email(destinatario, f"Novo {tipo.lower()} registrado por {usuario}", f"{descricao} - R$ {valor:.2f} - {categoria}")
+        st.success(f"{tipo} registrado com sucesso!")
         st.rerun()
-
-# Exibição dos dados
-df = get_dataframe()
-if not df.empty:
-    st.subheader("📋 Últimos lançamentos")
-    for i in df.tail(10).index:
-        col1, col2, col3, col4, col5 = st.columns([2, 3, 2, 3, 1])
-        col1.write(df.at[i, "Data"])
-        col2.write(df.at[i, "Descrição"])
-        valor = pd.to_numeric(df.at[i, 'Valor (R$)'], errors='coerce')
-        col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
-        col4.write(df.at[i, "Categoria"])
-        if col5.button("🗑️", key=f"delete_{i}"):
-            excluir_linha(i)
-            st.success("Registro excluído com sucesso!")
-            st.rerun()
-
-    total = df["Valor (R$)"].sum()
-    saldo_formatado = f"R$ {total:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',') if pd.notnull(total) else "R$ 0,00"
-    st.metric("💰 Saldo atual", saldo_formatado)
