@@ -95,7 +95,7 @@ if st.button("Registrar"):
             info = cartoes.get(cartao)
             if info:
                 fechamento = info["fechamento"]
-                if data_compra.day > fechamento:
+                if data_compra.day >= fechamento:
                     primeira_fatura = (data_compra.replace(day=1) + timedelta(days=32)).replace(day=1)
                 else:
                     primeira_fatura = data_compra.replace(day=1)
@@ -122,15 +122,20 @@ def carregar_tudo():
     for aba in abas:
         valores = aba.get_all_records()
         for i, linha in enumerate(valores):
-            if "Data" in linha and "Valor (R$)" in linha:
-                try:
-                    data_obj = datetime.strptime(linha["Data"], "%d/%m/%Y")
-                    linha["DataObj"] = data_obj
-                    linha["Aba"] = aba.title
-                    linha["LinhaIndex"] = i
-                    dados.append(linha)
-                except:
+            try:
+                data_raw = linha.get("Data")
+                valor_raw = linha.get("Valor (R$)")
+                if not data_raw or not valor_raw:
                     continue
+                data_obj = datetime.strptime(data_raw, "%d/%m/%Y")
+                valor_float = float(str(valor_raw).replace(",", "."))
+                linha["DataObj"] = data_obj
+                linha["Valor (R$)"] = valor_float
+                linha["Aba"] = aba.title
+                linha["LinhaIndex"] = i
+                dados.append(linha)
+            except:
+                continue
     df = pd.DataFrame(dados)
     if not df.empty:
         df = df.sort_values("DataObj", ascending=False).reset_index(drop=True)
@@ -143,13 +148,17 @@ if not df_historico.empty:
         col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 2, 3, 2, 1])
         col1.write(df_historico.at[i, "Data"])
         col2.write(df_historico.at[i, "Descrição"])
-        valor = pd.to_numeric(df_historico.at[i, 'Valor (R$)'], errors='coerce')
+        valor = df_historico.at[i, "Valor (R$)"]
         col3.write(f"R$ {valor:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
         col4.write(df_historico.at[i, "Categoria"])
         col5.write(f"Aba: {df_historico.at[i, 'Aba']}")
         if col6.button("🗑️", key=f"delete_global_{i}"):
             aba_nome = df_historico.at[i, "Aba"]
             aba = client.open_by_url(SHEET_URL).worksheet(aba_nome)
-            aba.delete_rows(df_historico.at[i, "LinhaIndex"] + 2)
-            st.success(f"Registro excluído da aba {aba_nome}!")
-            st.rerun()
+            linha_idx = df_historico.at[i, "LinhaIndex"]
+            if isinstance(linha_idx, int):
+                aba.delete_rows(linha_idx + 2)
+                st.success(f"Registro excluído da aba {aba_nome}!")
+                st.rerun()
+            else:
+                st.error(f"Erro: índice inválido ({linha_idx})")
