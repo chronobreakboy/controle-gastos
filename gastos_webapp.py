@@ -41,38 +41,22 @@ def excluir_linha(index):
 st.set_page_config(page_title="Controle de Gastos", layout="centered")
 st.title("💸 Controle de Gastos Diários 💸")
 
-# Categorias
-categorias_gasto_base = [
+# Estado inicial
+if "tipo" not in st.session_state:
+    st.session_state.tipo = "Gasto"
+
+# Radio fora do form pra atualizar dinamicamente
+tipo = st.radio("Tipo", ["Gasto", "Entrada"], key="tipo")
+categorias = sorted([
     "Alimentação", "Bebê", "Beleza", "Casa", "Educação",
     "Lazer", "Pets", "Roupas", "Saúde", "Transporte"
-]
-categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
-categorias_entrada = ["Salário", "Caixa 2"]
+]) + ["Outros"] if tipo == "Gasto" else ["Salário", "Caixa 2"]
 
-# Controle de estado manual
-if "tipo" not in st.session_state:
-    st.session_state.tipo = ""
-if "categoria" not in st.session_state:
-    st.session_state.categoria = None
-
-# Formulário
-with st.form("form_gasto"):
-    tipo = st.radio("Tipo", ["Gasto", "Entrada"], key="tipo_radio")
-    
-    # Resetar categoria se mudou o tipo
-    if tipo != st.session_state.tipo:
-        st.session_state.tipo = tipo
-        st.session_state.categoria = None
-
+# === FORMULÁRIO ===
+with st.form("form_lancamento"):
     descricao = st.text_input("Descrição")
     valor = st.number_input("Valor (use positivo)", step=0.01, format="%.2f")
-
-    categoria = None
-    if st.session_state.tipo == "Gasto":
-        categoria = st.selectbox("Categoria", categorias_gasto, index=None, placeholder="Selecione...", key="categoria")
-    elif st.session_state.tipo == "Entrada":
-        categoria = st.selectbox("Categoria", categorias_entrada, index=None, placeholder="Selecione...", key="categoria")
-
+    categoria = st.selectbox("Categoria", categorias, index=None, placeholder="Selecione...")
     enviar = st.form_submit_button("Registrar")
 
 if enviar:
@@ -84,9 +68,9 @@ if enviar:
         st.success(f"{tipo} registrada com sucesso!")
         st.rerun()
     else:
-        st.warning("Preencha todos os campos!")
+        st.warning("Preencha todos os campos corretamente!")
 
-# Exibir últimos lançamentos
+# === LISTA DE LANÇAMENTOS ===
 df = get_dataframe()
 if not df.empty:
     st.subheader("📋 Últimos lançamentos")
