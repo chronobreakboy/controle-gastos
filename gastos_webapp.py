@@ -192,36 +192,3 @@ if not df_historico.empty:
                     st.error("Linha vazia ou incompleta — nada excluído.")
             else:
                 st.error(f"Erro: índice inválido para exclusão ({linha_planilha})")
-def calcular_totais_credito(df):
-    totais = {}
-    for _, row in df.iterrows():
-        desc = row["Descrição"]
-        if "(" in desc and ")" in desc and "-" in desc:
-            partes = desc.split(" - ")
-            if len(partes) == 2:
-                cartao = partes[1].strip()
-                if cartao in cartoes:
-                    totais[cartao] = totais.get(cartao, 0) + abs(row["Valor (R$)"])
-    return totais
-
-def atualizar_planilha_vencimentos(df):
-    venc_url = "https://docs.google.com/spreadsheets/d/1vRsh9o2utSvxz-cIxLC7c66HOLPh6F6bki_0yR4hOpw/edit?usp=sharing"
-    venc_sheet = client.open_by_url(venc_url).sheet1
-    valores = venc_sheet.get_all_values()
-    if not valores or len(valores) < 6:
-        return
-
-    totais = calcular_totais_credito(df)
-    linhas = valores[5:]  # a partir da linha 6
-    for i, linha in enumerate(linhas, start=6):
-        for j, celula in enumerate(linha[2:], start=3):  # colunas a partir da C
-            for nome_cartao, total in totais.items():
-                if nome_cartao in celula:
-                    antes, depois = celula.split(")")[0] + ")", celula.split(")")[1:]
-                    novo_texto = f"{antes} R${total:,.2f}".replace('.', '#').replace(',', '.').replace('#', ',')
-                    complemento = " ".join(depois).strip()
-                    final = f"{novo_texto} {complemento}".strip()
-                    venc_sheet.update_cell(i, j, final)
-
-# Chama a atualização após carregar o histórico
-atualizar_planilha_vencimentos(df_historico)
