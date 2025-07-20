@@ -42,7 +42,7 @@ def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     if not todas or todas[0] != headers:
         sheet_mes.insert_row(headers, index=1)
     valor_str = f"{valor:.2f}".replace(",", ".")
-    sheet_mes.append_row([data.strftime("%d/%m/%Y %H:%M:%S"), descricao, valor_str, categoria])
+    sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
 
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
@@ -143,7 +143,7 @@ def carregar_tudo():
             if len(linha) < 4:
                 continue
             try:
-                data_obj = datetime.strptime(linha[0], "%d/%m/%Y %H:%M:%S")
+                data_obj = datetime.strptime(linha[0], "%d/%m/%Y")
                 valor_float = float(str(linha[2]).replace(",", "."))
                 dados.append({
                     "Data": linha[0],
@@ -158,9 +158,7 @@ def carregar_tudo():
                 continue
     df = pd.DataFrame(dados)
     if not df.empty:
-        hoje = datetime.now().date()
-        df["isHoje"] = df["DataObj"].dt.date == hoje
-        df = df.sort_values(by=["isHoje", "DataObj"], ascending=[False, False]).reset_index(drop=True)
+        df = df.sort_values("DataObj", ascending=False).reset_index(drop=True)
     return df
 
 df_historico = carregar_tudo()
