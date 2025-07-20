@@ -42,7 +42,7 @@ def add_lancamento_em_mes(data, descricao, valor, categoria, aba):
     if not todas or todas[0] != headers:
         sheet_mes.insert_row(headers, index=1)
     valor_str = f"{valor:.2f}".replace(",", ".")
-    sheet_mes.append_row([data.strftime("%d/%m/%Y %H:%M:%S"), descricao, valor_str, categoria])
+    sheet_mes.append_row([data.strftime("%d/%m/%Y"), descricao, valor_str, categoria])
 
 def enviar_email(para, assunto, corpo):
     user = st.secrets["email_user"]
@@ -143,7 +143,7 @@ def carregar_tudo():
             if len(linha) < 4:
                 continue
             try:
-                data_obj = datetime.strptime(linha[0], "%d/%m/%Y %H:%M:%S")
+                data_obj = datetime.strptime(linha[0], "%d/%m/%Y")
                 valor_float = float(str(linha[2]).replace(",", "."))
                 dados.append({
                     "Data": linha[0],
@@ -158,7 +158,7 @@ def carregar_tudo():
                 continue
     df = pd.DataFrame(dados)
     if not df.empty:
-        df = df.sort_values(by=["DataObj"], ascending=False).reset_index(drop=True)
+        df = df.sort_values("DataObj", ascending=False).reset_index(drop=True)
     return df
 
 df_historico = carregar_tudo()
@@ -168,14 +168,7 @@ if not df_historico.empty:
     total_atual = df_historico[df_historico['Aba'] == aba_atual]['Valor (R$)'].sum()
     st.metric(label=f"Saldo total de {aba_atual}", value=f"R$ {total_atual:,.2f}".replace('.', '#').replace(',', '.').replace('#', ','))
 
-    hoje = datetime.now().date()
-    hoje_formatado = hoje.strftime("%d/%m/%Y")
-    st.write(f"### 📅 Hoje ({hoje_formatado})")
-
     for i in df_historico.index:
-        data_lanc = df_historico.at[i, "DataObj"].date()
-        if i == 0 or df_historico.at[i, "Data"] != df_historico.at[i - 1, "Data"]:
-            st.write("\n")
         col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 2, 3, 2, 1])
         col1.write(df_historico.at[i, "Data"])
         col2.write(df_historico.at[i, "Descrição"])
