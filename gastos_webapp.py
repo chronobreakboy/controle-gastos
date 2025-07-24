@@ -90,7 +90,10 @@ categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
-descricao = st.text_input("Descrição")
+
+descricao_default = "🥵🥵🥵🥵 minha putinha perfeita 🤬🤬🤬🤬🤬" if tipo == "Entrada" and categoria == "Caixa 2" else ""
+descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
+descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
 valor = st.number_input("Valor", step=0.01, format="%.2f")
 
 credito = False
