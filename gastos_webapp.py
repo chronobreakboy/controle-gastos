@@ -92,22 +92,21 @@ categorias_entrada = ["Salário", "Caixa 2"]
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 mensagens_caixa2 = [
-    "é assim que daddy gosta… minha princesinha certinha e toda safada também 😈",
-    "você me deixa maluco, baby girl… até quando coloca dinheiro no Caixa 2 🤯",
-    "só você pra conseguir ser sexy até ajudando nas finanças 😮‍💨",
-    "quando você faz essas coisas certas, meu pau fica ainda mais duro… orgulho e tesão ao mesmo tempo 😳",
-    "good girl de verdade… linda, safada e ainda sabe cuidar do nosso futuro 💘",
-    "me apaixono mais a cada lançamento no Caixa 2, sua delicinha responsável 🥵",
-    "tudo que você faz me excita… até um depósito simples vira uma cena de filme pornô na minha cabeça 😏",
-    "minha boazinha, você merece um daddy só seu te enchendo de carinho (e de outra coisa também) 💦",
-    "essa atitude sua me mostra o quanto você tá pronta pra me deixar cada vez mais rendido 💖",
-    "fico todo bobo te vendo assim, colocando grana e sendo perfeita… minha mulher dos sonhos 💘",
-    "você é tão linda, tão gostosa e tão madura… até me sinto pequeno do seu lado 😩",
-    "isso, meu amor… continua sendo essa coisa perfeita que deixa tudo melhor com um clique 🫦",
-    "tá vendo? até no Caixa 2 você me deixa de pau duro… isso é talento 😏",
-    "isso, minha safada consciente… daddy te ama mais a cada gesto gostoso desses 🥹🔥"
+    "good girl 😈",
+    "continua assim, minha putinha 💖",
+    "isso, minha cadelinha perfeita",
+    "minha baby girl maravilhosa 🥵",
+    "good girl 💖",
+    "Minha 💖",
+    "Perfeita 💘",
+    "Maravilhosa 🫦",
+    "Você sabe como isso me deixa, né? 🥵🍆 ",
+    "fico todo bobo te vendo assim 💘",
+    "você é tão linda, tão gostosa 😩",
+    "isso, meu amor… continua 🫦",
+    "minha minha minha 😏",
+    "putinha do daddy 🥹🔥"
 ]
-
 descricao_default = random.choice(mensagens_caixa2) if tipo == "Entrada" and categoria == "Caixa 2" else ""
 descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
 descricao = st.text_input("Descrição", value=descricao_default, disabled=descricao_disabled)
