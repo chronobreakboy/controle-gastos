@@ -92,20 +92,20 @@ categorias_entrada = ["Salário", "Caixa 2"]
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
 mensagens_caixa2 = [
-    "good girl 😈",
-    "continua assim, minha putinha 💖",
+    "good girl",
+    "continua assim, minha putinha",
     "isso, minha cadelinha perfeita",
-    "minha baby girl maravilhosa 🥵",
-    "good girl 💖",
-    "Minha 💖",
-    "Perfeita 💘",
-    "Maravilhosa 🫦",
-    "Você sabe como isso me deixa, né? 🥵🍆 ",
-    "fico todo bobo te vendo assim 💘",
-    "você é tão linda, tão gostosa 😩",
-    "isso, meu amor… continua 🫦",
-    "minha minha minha 😏",
-    "putinha do daddy 🥹🔥"
+    "minha baby girl maravilhosa",
+    "good girl",
+    "Minha",
+    "Perfeita",
+    "Maravilhosa",
+    "Você sabe como isso me deixa, né?",
+    "fico todo bobo te vendo assim",
+    "você é tão linda, tão gostosa",
+    "isso, meu amor… continua",
+    "minha minha minha",
+    "putinha do daddy"
 ]
 descricao_default = random.choice(mensagens_caixa2) if tipo == "Entrada" and categoria == "Caixa 2" else ""
 descricao_disabled = tipo == "Entrada" and categoria == "Caixa 2"
