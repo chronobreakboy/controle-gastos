@@ -91,7 +91,7 @@ categorias_gasto = sorted(categorias_gasto_base) + ["Outros"]
 categorias_entrada = ["Salário", "Caixa 2"]
 tipo = st.radio("Tipo", ["Gasto", "Entrada"], horizontal=True)
 categoria = st.selectbox("Categoria", ["Selecione..."] + (categorias_gasto if tipo == "Gasto" else categorias_entrada), index=0)
-mensagens_caixa2 += [
+mensagens_caixa2 = [
     "é assim que daddy gosta… minha princesinha certinha e toda safada também 😈",
     "você me deixa maluco, baby girl… até quando coloca dinheiro no Caixa 2 🤯",
     "só você pra conseguir ser sexy até ajudando nas finanças 😮‍💨",
