@@ -7,7 +7,7 @@ import json, os, smtplib
 from email.mime.text import MIMEText
 from oauth2client.service_account import ServiceAccountCredentials
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA/edit?hl=pt-br"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1o2WQ0D7Ne-ZkrEXg-Wl5A36LVWFupLioUPalz7F5HmA"
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds_dict = json.loads(os.environ["credentials"])
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
